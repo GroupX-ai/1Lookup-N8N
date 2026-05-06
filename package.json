@@ -1,0 +1,60 @@
+{
+	"name": "n8n-nodes-1lookup",
+	"version": "1.0.0",
+	"description": "n8n community node for 1Lookup email, phone, IP, and domain intelligence APIs.",
+	"license": "MIT",
+	"homepage": "https://app.1lookup.io",
+	"keywords": [
+		"n8n-community-node-package",
+		"n8n",
+		"1lookup",
+		"email-validation",
+		"phone-validation",
+		"ip-intelligence",
+		"domain-seo"
+	],
+	"author": {
+		"name": "1Lookup",
+		"email": "support@1lookup.io"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/your-org/1lookup-n8n.git"
+	},
+	"scripts": {
+		"build": "n8n-node build",
+		"build:watch": "tsc --watch",
+		"dev": "n8n-node dev",
+		"lint": "n8n-node lint",
+		"lint:fix": "n8n-node lint --fix",
+		"release": "n8n-node release",
+		"prepublishOnly": "n8n-node prerelease"
+	},
+	"files": [
+		"dist"
+	],
+	"n8n": {
+		"n8nNodesApiVersion": 1,
+		"strict": true,
+		"credentials": [
+			"dist/credentials/OneLookupApi.credentials.js"
+		],
+		"nodes": [
+			"dist/nodes/OneLookup/OneLookup.node.js"
+		]
+	},
+	"devDependencies": {
+		"@n8n/node-cli": "*",
+		"eslint": "9.39.4",
+		"n8n-workflow": "*",
+		"prettier": "3.8.3",
+		"release-it": "20.0.1",
+		"typescript": "5.9.3"
+	},
+	"peerDependencies": {
+		"n8n-workflow": "*"
+	},
+	"engines": {
+		"node": "^20.19.0 || >=22.13.0"
+	}
+}

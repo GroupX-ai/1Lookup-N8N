@@ -1,0 +1,18 @@
+{
+	"node": "n8n-nodes-1lookup",
+	"nodeVersion": "1.0",
+	"codexVersion": "1.0",
+	"categories": ["Security", "Developer Tools"],
+	"resources": {
+		"credentialDocumentation": [
+			{
+				"url": "https://app.1lookup.io/dashboard"
+			}
+		],
+		"primaryDocumentation": [
+			{
+				"url": "https://github.com/your-org/1lookup-n8n#readme"
+			}
+		]
+	}
+}
