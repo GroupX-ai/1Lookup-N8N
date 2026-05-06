@@ -1,4 +1,4 @@
-# n8n-nodes-1lookup
+# @momentum-labs/n8n-nodes-1lookup
 
 Use 1Lookup in n8n workflows to validate, enrich, and risk-score email addresses, phone numbers, IP addresses, and domains.
 
@@ -24,7 +24,7 @@ This package provides a community node for the [1Lookup](https://app.1lookup.io)
 4. Enter this package name:
 
 ```text
-n8n-nodes-1lookup
+@momentum-labs/n8n-nodes-1lookup
 ```
 
 1. Confirm the installation and restart n8n if your environment requires it.
@@ -34,7 +34,7 @@ n8n-nodes-1lookup
 If your n8n setup installs community nodes through npm, install the package from your n8n environment:
 
 ```bash
-npm install n8n-nodes-1lookup
+npm install @momentum-labs/n8n-nodes-1lookup
 ```
 
 Then restart n8n so it can discover the node.
@@ -119,7 +119,7 @@ Enable **Simplify Response** to return only the nested `data` object when the AP
 
 - Node.js: `^20.19.0 || >=22.13.0`
 - n8n community node package format: `n8nNodesApiVersion` 1
-- Package name: `n8n-nodes-1lookup`
+- Package name: `@momentum-labs/n8n-nodes-1lookup`
 - Node display name: `1Lookup`
 - Credential display name: `1Lookup API`
 
