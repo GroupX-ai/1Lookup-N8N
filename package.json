@@ -1,5 +1,5 @@
 {
-	"name": "n8n-nodes-1lookup",
+	"name": "@momentum-labs/n8n-nodes-1lookup",
 	"version": "1.0.0",
 	"description": "n8n community node for 1Lookup email, phone, IP, and domain intelligence APIs.",
 	"license": "MIT",

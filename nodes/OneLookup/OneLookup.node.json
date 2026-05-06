@@ -1,5 +1,5 @@
 {
-	"node": "n8n-nodes-1lookup",
+	"node": "@momentum-labs/n8n-nodes-1lookup",
 	"nodeVersion": "1.0",
 	"codexVersion": "1.0",
 	"categories": ["Security", "Developer Tools"],
