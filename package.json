@@ -1,9 +1,9 @@
 {
 	"name": "@momentum-labs/n8n-nodes-1lookup",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "n8n community node for 1Lookup email, phone, IP, and domain intelligence APIs.",
 	"license": "MIT",
-	"homepage": "https://app.1lookup.io",
+	"homepage": "https://1lookup.io",
 	"keywords": [
 		"n8n-community-node-package",
 		"n8n",

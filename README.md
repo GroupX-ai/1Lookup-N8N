@@ -2,15 +2,19 @@
 
 Use 1Lookup in n8n workflows to validate, enrich, and risk-score email addresses, phone numbers, IP addresses, and domains.
 
-This package provides a community node for the [1Lookup](https://app.1lookup.io) API. It is built for fraud prevention, lead enrichment, contact verification, order review, and data-quality automation workflows.
+This package provides a community node for the [1Lookup](https://1lookup.io) API. It is built for fraud prevention, lead enrichment, contact verification, order review, and data-quality automation workflows.
 
 ## Features
 
 - Validate email addresses before adding them to a CRM, list, or outbound workflow.
 - Validate, classify, scrub, and spam-check phone numbers.
+- Run HLR, MNP, and Number Type lookups for phone intelligence.
+- Find mobile numbers from profile URLs, work emails, or personal emails.
 - Append missing email or phone data from contact identity fields.
+- Enrich work emails from a person's name and company domain.
 - Reverse lookup contact details from an email address, phone number, or IP address.
 - Analyze domain SEO authority, backlinks, traffic, and related domain intelligence signals.
+- Look up search intent data for a query.
 - Return full API responses or simplified `data` payloads for easier downstream mapping.
 - Use the node as an n8n AI tool where supported.
 
@@ -27,7 +31,7 @@ This package provides a community node for the [1Lookup](https://app.1lookup.io)
 @momentum-labs/n8n-nodes-1lookup
 ```
 
-1. Confirm the installation and restart n8n if your environment requires it.
+5. Confirm the installation and restart n8n if your environment requires it.
 
 ### Self-Hosted npm Install
 
@@ -49,11 +53,10 @@ The node uses a `1Lookup API` credential.
 4. Paste the API key and save.
 5. Use the built-in credential test to verify the connection.
 
-The credential sends the API key using both supported headers:
+The credential sends the API key using the supported authorization header:
 
 ```text
 Authorization: Bearer <api_key>
-X-API-KEY: <api_key>
 ```
 
 ## Available Operations
@@ -61,19 +64,25 @@ X-API-KEY: <api_key>
 The package includes one `1Lookup` node with grouped resources.
 
 
-| Resource | Operation                | Required input                                 | API route                         |
-| -------- | ------------------------ | ---------------------------------------------- | --------------------------------- |
-| Email    | Validate Email           | Email                                          | `/api/v1/email`                   |
-| Email    | Append Email             | First Name, Last Name, Address, City, ZIP Code | `/api/v1/email-append`            |
-| Email    | Look Up Contact by Email | Email                                          | `/api/v1/reverse-email-append`    |
-| Phone    | Validate Phone           | Phone Number                                   | `/api/v1/phone`                   |
-| Phone    | Check Phone for Spam     | Phone Number                                   | `/api/v1/phone-spam`              |
-| Phone    | Scrub Phone              | Phone Number                                   | `/api/v1/phone-scrub`             |
-| Phone    | Append Phone             | First Name, Last Name, Address, City, ZIP Code | `/api/v1/phone-append`            |
-| Phone    | Look Up Contact by Phone | Phone Number                                   | `/api/v1/reverse-phone-lookup`    |
-| IP       | Look Up IP Address       | IP Address                                     | `/api/v1/ip`                      |
-| IP       | Look Up Contact by IP    | IP Address                                     | `/api/v1/reverse-ip-append`       |
-| Domain   | Analyze Domain SEO       | Domain                                         | `/api/v1/domain-seo-intelligence` |
+| Resource | Operation                | Required input                                                     | API route                         |
+| -------- | ------------------------ | ------------------------------------------------------------------ | --------------------------------- |
+| Email    | Validate Email           | Email                                                              | `/api/v1/email`                   |
+| Email    | Append Email             | First Name, Last Name, Address, City, ZIP Code                     | `/api/v1/email-append`            |
+| Email    | Enrich Email             | Company Domain and either First/Last Name, Full Name, or Name      | `/api/v1/email-enrichment`        |
+| Email    | Look Up Contact by Email | Email                                                              | `/api/v1/reverse-email-append`    |
+| Phone    | Validate Phone           | Phone Number                                                       | `/api/v1/phone`                   |
+| Phone    | Check Phone for Spam     | Phone Number                                                       | `/api/v1/phone-spam`              |
+| Phone    | HLR Lookup               | Phone Number                                                       | `/api/v1/hlr-lookup`              |
+| Phone    | MNP Lookup               | Phone Number                                                       | `/api/v1/mnp-lookup`              |
+| Phone    | Number Type Lookup       | Phone Number                                                       | `/api/v1/nt-lookup`               |
+| Phone    | Scrub Phone              | Phone Number                                                       | `/api/v1/phone-scrub`             |
+| Phone    | Append Phone             | First Name, Last Name, Address, City, ZIP Code                     | `/api/v1/phone-append`            |
+| Phone    | Find Mobile              | At least one of Profile URL, Work Email, or Personal Email         | `/api/v1/mobile-finder`           |
+| Phone    | Look Up Contact by Phone | Phone Number                                                       | `/api/v1/reverse-phone-lookup`    |
+| IP       | Look Up IP Address       | IP Address                                                         | `/api/v1/ip`                      |
+| IP       | Look Up Contact by IP    | IP Address                                                         | `/api/v1/reverse-ip-append`       |
+| Domain   | Analyze Domain SEO       | Domain                                                             | `/api/v1/domain-seo-intelligence` |
+| Search   | Look Up Search Intent    | Search Query                                                       | `/api/v1/search-intent-lookup`    |
 
 
 ## Common Workflows
@@ -90,9 +99,17 @@ Use records from HubSpot, Salesforce, Airtable, Google Sheets, or a database nod
 
 Use Append Email or Append Phone when you have name and address data but missing contact fields. Continue only when the response indicates a match and your internal compliance rules allow contact use.
 
+### Enrich B2B contacts
+
+Use Enrich Email when you have a person's name and company domain but need a likely work email. Use Find Mobile when you have a professional profile URL, work email, or personal email and need mobile number enrichment.
+
 ### Analyze domains
 
 Use Analyze Domain SEO to collect authority, backlink, traffic, and trust signals for lead scoring, partner review, marketplace checks, or domain intelligence workflows.
+
+### Research search intent
+
+Use Look Up Search Intent to retrieve web search intelligence such as organic result data, knowledge graph data, people also ask, and related searches.
 
 ## Output
 
@@ -110,7 +127,7 @@ Enable **Simplify Response** to return only the nested `data` object when the AP
 
 ## Notes and Limits
 
-- This node only calls 1Lookup API endpoints. It does not perform web scraping or crawl third-party websites.
+- This node only calls 1Lookup API endpoints. It does not perform direct browser automation or crawl third-party websites from n8n.
 - API usage, credits, rate limits, and available data depend on your 1Lookup account and plan.
 - Phone and contact data should be used according to your business compliance requirements, including consent, DNC, TCPA, CAN-SPAM, GDPR, CCPA, and any other applicable regulations.
 - For production workflows, add error handling with n8n's continue-on-fail, IF, or error workflow patterns.
@@ -164,6 +181,7 @@ npm pack --dry-run
 ## Support
 
 - 1Lookup dashboard: [https://app.1lookup.io/dashboard](https://app.1lookup.io/dashboard)
+- 1Lookup homepage: [https://1lookup.io](https://1lookup.io)
 - 1Lookup API docs: [https://app.1lookup.io/api](https://app.1lookup.io/api)
 - n8n community node installation docs: [https://docs.n8n.io/integrations/community-nodes/installation/](https://docs.n8n.io/integrations/community-nodes/installation/)
 - n8n custom node docs: [https://docs.n8n.io/integrations/creating-nodes/](https://docs.n8n.io/integrations/creating-nodes/)
