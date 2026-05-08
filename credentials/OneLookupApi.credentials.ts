@@ -34,7 +34,6 @@ export class OneLookupApi implements ICredentialType {
 		properties: {
 			headers: {
 				Authorization: '=Bearer {{$credentials.apiKey}}',
-				'X-API-KEY': '={{$credentials.apiKey}}',
 			},
 		},
 	};

@@ -69,6 +69,35 @@ function isObject(value: unknown): value is IDataObject {
 	return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
+function getOptionalString(
+	ctx: IExecuteFunctions,
+	name: string,
+	itemIndex: number,
+): string | undefined {
+	const value = ctx.getNodeParameter(name, itemIndex, '') as string;
+	const trimmedValue = value.trim();
+
+	return trimmedValue === '' ? undefined : trimmedValue;
+}
+
+function compactObject(data: IDataObject): IDataObject {
+	const result: IDataObject = {};
+
+	for (const [key, value] of Object.entries(data)) {
+		if (value === undefined || value === null) {
+			continue;
+		}
+
+		if (typeof value === 'string' && value.trim() === '') {
+			continue;
+		}
+
+		result[key] = value;
+	}
+
+	return result;
+}
+
 function getContactInput(ctx: IExecuteFunctions, itemIndex: number): IDataObject {
 	return {
 		firstName: ctx.getNodeParameter('firstName', itemIndex),
@@ -110,6 +139,30 @@ function buildRequestOptions(
 		options.body = {
 			input: getContactInput(ctx, itemIndex),
 		};
+		return options;
+	}
+
+	if (resource === 'email' && operation === 'enrich') {
+		const body = compactObject({
+			firstName: getOptionalString(ctx, 'enrichmentFirstName', itemIndex),
+			lastName: getOptionalString(ctx, 'enrichmentLastName', itemIndex),
+			domain: ctx.getNodeParameter('companyDomain', itemIndex),
+			fullName: getOptionalString(ctx, 'fullName', itemIndex),
+			name: getOptionalString(ctx, 'nameAlias', itemIndex),
+		});
+
+		const hasFirstAndLastName = body.firstName !== undefined && body.lastName !== undefined;
+
+		if (!hasFirstAndLastName && body.fullName === undefined && body.name === undefined) {
+			throw new NodeOperationError(
+				ctx.getNode(),
+				'Provide First Name and Last Name, Full Name, or Name.',
+				{ itemIndex },
+			);
+		}
+
+		options.url = '/api/v1/email-enrichment';
+		options.body = body;
 		return options;
 	}
 
@@ -169,6 +222,50 @@ function buildRequestOptions(
 		return options;
 	}
 
+	if (resource === 'phone' && operation === 'hlrLookup') {
+		options.url = '/api/v1/hlr-lookup';
+		options.body = {
+			phone_number: ctx.getNodeParameter('phoneNumber', itemIndex),
+		};
+		return options;
+	}
+
+	if (resource === 'phone' && operation === 'mnpLookup') {
+		options.url = '/api/v1/mnp-lookup';
+		options.body = {
+			phone_number: ctx.getNodeParameter('phoneNumber', itemIndex),
+		};
+		return options;
+	}
+
+	if (resource === 'phone' && operation === 'ntLookup') {
+		options.url = '/api/v1/nt-lookup';
+		options.body = {
+			phone_number: ctx.getNodeParameter('phoneNumber', itemIndex),
+		};
+		return options;
+	}
+
+	if (resource === 'phone' && operation === 'findMobile') {
+		const body = compactObject({
+			profile_url: getOptionalString(ctx, 'profileUrl', itemIndex),
+			work_email: getOptionalString(ctx, 'workEmail', itemIndex),
+			personal_email: getOptionalString(ctx, 'personalEmail', itemIndex),
+		});
+
+		if (Object.keys(body).length === 0) {
+			throw new NodeOperationError(
+				ctx.getNode(),
+				'Provide at least one of Profile URL, Work Email, or Personal Email.',
+				{ itemIndex },
+			);
+		}
+
+		options.url = '/api/v1/mobile-finder';
+		options.body = body;
+		return options;
+	}
+
 	if (resource === 'phone' && operation === 'lookupContact') {
 		options.url = '/api/v1/reverse-phone-lookup';
 		options.body = {
@@ -186,6 +283,14 @@ function buildRequestOptions(
 		return options;
 	}
 
+	if (resource === 'search' && operation === 'lookupIntent') {
+		options.url = '/api/v1/search-intent-lookup';
+		options.body = {
+			q: ctx.getNodeParameter('query', itemIndex),
+		};
+		return options;
+	}
+
 	throw new NodeOperationError(ctx.getNode(), `Unsupported operation: ${resource}/${operation}`);
 }
 
@@ -197,7 +302,7 @@ export class OneLookup implements INodeType {
 		group: ['transform'],
 		version: 1,
 		subtitle: '={{$parameter["resource"] + ": " + $parameter["operation"]}}',
-		description: 'Validate and enrich email, phone, IP, and domain data with 1Lookup',
+		description: 'Validate and enrich email, phone, IP, domain, and search intent data with 1Lookup',
 		defaults: {
 			name: '1Lookup',
 		},
@@ -222,6 +327,7 @@ export class OneLookup implements INodeType {
 					{ name: 'Email', value: 'email' },
 					{ name: 'IP', value: 'ip' },
 					{ name: 'Phone', value: 'phone' },
+					{ name: 'Search', value: 'search' },
 				],
 			},
 			{
@@ -237,6 +343,7 @@ export class OneLookup implements INodeType {
 				},
 				options: [
 					{ name: 'Append Email', value: 'append', action: 'Append email to a contact' },
+					{ name: 'Enrich Email', value: 'enrich', action: 'Enrich email from a name and domain' },
 					{ name: 'Look Up Contact by Email', value: 'lookupContact', action: 'Look up contact by email' },
 					{ name: 'Validate Email', value: 'validate', action: 'Validate an email address' },
 				],
@@ -271,7 +378,11 @@ export class OneLookup implements INodeType {
 				options: [
 					{ name: 'Append Phone', value: 'append', action: 'Append phone to a contact' },
 					{ name: 'Check Phone for Spam', value: 'checkSpam', action: 'Check a phone number for spam' },
+					{ name: 'Find Mobile', value: 'findMobile', action: 'Find a mobile number' },
+					{ name: 'HLR Lookup', value: 'hlrLookup', action: 'Run HLR lookup' },
 					{ name: 'Look Up Contact by Phone', value: 'lookupContact', action: 'Look up contact by phone' },
+					{ name: 'MNP Lookup', value: 'mnpLookup', action: 'Run MNP lookup' },
+					{ name: 'Number Type Lookup', value: 'ntLookup', action: 'Look up number type' },
 					{ name: 'Scrub Phone', value: 'scrub', action: 'Scrub a phone number' },
 					{ name: 'Validate Phone', value: 'validate', action: 'Validate a phone number' },
 				],
@@ -289,6 +400,21 @@ export class OneLookup implements INodeType {
 				},
 				options: [
 					{ name: 'Analyze Domain SEO', value: 'analyzeSeo', action: 'Analyze domain SEO' },
+				],
+			},
+			{
+				displayName: 'Operation',
+				name: 'operation',
+				type: 'options',
+				noDataExpression: true,
+				default: 'lookupIntent',
+				displayOptions: {
+					show: {
+						resource: ['search'],
+					},
+				},
+				options: [
+					{ name: 'Look Up Search Intent', value: 'lookupIntent', action: 'Look up search intent' },
 				],
 			},
 			{
@@ -315,6 +441,72 @@ export class OneLookup implements INodeType {
 				},
 			})),
 			{
+				displayName: 'First Name',
+				name: 'enrichmentFirstName',
+				type: 'string',
+				default: '',
+				description: 'Given name. Required with Last Name unless Full Name or Name is provided.',
+				displayOptions: {
+					show: {
+						resource: ['email'],
+						operation: ['enrich'],
+					},
+				},
+			},
+			{
+				displayName: 'Last Name',
+				name: 'enrichmentLastName',
+				type: 'string',
+				default: '',
+				description: 'Family name. Required with First Name unless Full Name or Name is provided.',
+				displayOptions: {
+					show: {
+						resource: ['email'],
+						operation: ['enrich'],
+					},
+				},
+			},
+			{
+				displayName: 'Company Domain',
+				name: 'companyDomain',
+				type: 'string',
+				default: '',
+				required: true,
+				placeholder: '1lookup.io',
+				displayOptions: {
+					show: {
+						resource: ['email'],
+						operation: ['enrich'],
+					},
+				},
+			},
+			{
+				displayName: 'Full Name',
+				name: 'fullName',
+				type: 'string',
+				default: '',
+				description: 'Full name. Must include at least first and last name.',
+				displayOptions: {
+					show: {
+						resource: ['email'],
+						operation: ['enrich'],
+					},
+				},
+			},
+			{
+				displayName: 'Name',
+				name: 'nameAlias',
+				type: 'string',
+				default: '',
+				description: 'Alias for Full Name',
+				displayOptions: {
+					show: {
+						resource: ['email'],
+						operation: ['enrich'],
+					},
+				},
+			},
+			{
 				displayName: 'IP Address',
 				name: 'ip',
 				type: 'string',
@@ -338,7 +530,57 @@ export class OneLookup implements INodeType {
 				displayOptions: {
 					show: {
 						resource: ['phone'],
-						operation: ['validate', 'checkSpam', 'scrub', 'lookupContact'],
+						operation: [
+							'validate',
+							'checkSpam',
+							'scrub',
+							'lookupContact',
+							'hlrLookup',
+							'mnpLookup',
+							'ntLookup',
+						],
+					},
+				},
+			},
+			{
+				displayName: 'Profile URL',
+				name: 'profileUrl',
+				type: 'string',
+				default: '',
+				placeholder: 'https://www.linkedin.com/in/jane-doe/',
+				description: 'Professional profile URL. Provide at least one of Profile URL, Work Email, or Personal Email.',
+				displayOptions: {
+					show: {
+						resource: ['phone'],
+						operation: ['findMobile'],
+					},
+				},
+			},
+			{
+				displayName: 'Work Email',
+				name: 'workEmail',
+				type: 'string',
+				default: '',
+				placeholder: 'jane.doe@company.com',
+				description: 'Work email address. Provide at least one of Profile URL, Work Email, or Personal Email.',
+				displayOptions: {
+					show: {
+						resource: ['phone'],
+						operation: ['findMobile'],
+					},
+				},
+			},
+			{
+				displayName: 'Personal Email',
+				name: 'personalEmail',
+				type: 'string',
+				default: '',
+				placeholder: 'jane.doe@gmail.com',
+				description: 'Personal email address. Provide at least one of Profile URL, Work Email, or Personal Email.',
+				displayOptions: {
+					show: {
+						resource: ['phone'],
+						operation: ['findMobile'],
 					},
 				},
 			},
@@ -374,6 +616,20 @@ export class OneLookup implements INodeType {
 					show: {
 						resource: ['domain'],
 						operation: ['analyzeSeo'],
+					},
+				},
+			},
+			{
+				displayName: 'Search Query',
+				name: 'query',
+				type: 'string',
+				default: '',
+				required: true,
+				placeholder: 'best CRM for plumbers',
+				displayOptions: {
+					show: {
+						resource: ['search'],
+						operation: ['lookupIntent'],
 					},
 				},
 			},
